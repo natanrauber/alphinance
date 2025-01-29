@@ -105,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
               color: AppColors.orange,
               border: Border.all(
                 color: Colors.black,
-                strokeAlign: BorderSide.strokeAlignCenter,
+                strokeAlign: BorderSide.strokeAlignOutside,
               ),
             ),
             child: Row(
