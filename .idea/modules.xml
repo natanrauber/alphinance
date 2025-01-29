@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/finance.iml" filepath="$PROJECT_DIR$/finance.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/finance_android.iml" filepath="$PROJECT_DIR$/android/finance_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/alphinance.iml" filepath="$PROJECT_DIR$/alphinance.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/alphinance_android.iml" filepath="$PROJECT_DIR$/android/alphinance_android.iml" />
     </modules>
   </component>
 </project>

@@ -1,4 +1,4 @@
-# finance
+# alphinance
 
 A new Flutter project.
 

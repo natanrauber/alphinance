@@ -1,5 +1,5 @@
-name: finance
-description: "A new Flutter project."
+name: alphinance
+description: ""
 
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
@@ -12,6 +12,7 @@ dependencies:
   csv: ^6.0.0
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
   get: ^4.6.6
 
 dev_dependencies:
@@ -22,3 +23,5 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   uses-material-design: true
+  assets:
+    - assets/

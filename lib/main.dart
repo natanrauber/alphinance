@@ -1,4 +1,4 @@
-import 'package:finance/colors.dart';
+import 'package:alphinance/colors.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Finance',
+        title: 'Alphinance',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.orange,
