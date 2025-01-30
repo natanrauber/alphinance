@@ -46,9 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _filterTextField() => SizedBox(
         height: 56,
         child: TextField(
-          decoration: const InputDecoration(
-            hintText: 'Filter (e.g. text, !exclude)',
-          ),
+          decoration: const InputDecoration(hintText: 'Filter (e.g. text, !exclude)'),
+          expands: true,
+          maxLines: null,
           onSubmitted: (String value) {
             rawFilter = value;
             _parseCsvToJson();
@@ -242,8 +242,9 @@ class _MyHomePageState extends State<MyHomePage> {
           height: 56,
           child: TextField(
             decoration: const InputDecoration(hintText: 'Input (.csv format)'),
-            keyboardType: TextInputType.multiline,
+            expands: true,
             maxLines: null,
+            keyboardType: TextInputType.multiline,
             onChanged: (String value) => input = value,
           ),
         ),
