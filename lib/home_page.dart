@@ -49,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: const InputDecoration(hintText: 'Filter (e.g. text, !exclude)'),
           expands: true,
           maxLines: null,
-          onSubmitted: (String value) {
+          onChanged: (String value) {
             rawFilter = value;
             _parseCsvToJson();
           },
