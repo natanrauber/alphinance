@@ -10,6 +10,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const double _checkboxColumnWidth = 36;
+  static const double _uncheckedRowOpacity = 0.35;
+
   String? input;
   String? rawFilter;
   String? sortByColumn;
@@ -17,6 +20,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> headers = <String>[];
   List<Map<String, dynamic>> itemList = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> filteredList = <Map<String, dynamic>>[];
+  List<bool> _includedFlags = <bool>[];
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -71,8 +75,13 @@ class _MyHomePageState extends State<MyHomePage> {
       if (filters.every((String f) => f.startsWith('!'))) add = true;
       if (add && exclude == false && groupByColumn == null) filteredList.add(e);
       if (add && exclude == false && groupByColumn != null) {
-        Map<String, dynamic>? match =
-            filteredList.firstWhereOrNull((Map<String, dynamic> i) => i[groupByColumn] == e[groupByColumn]);
+        if (_isIncluded(e) == false) {
+          filteredList.add(e);
+          continue;
+        }
+        Map<String, dynamic>? match = filteredList.firstWhereOrNull(
+          (Map<String, dynamic> i) => i[groupByColumn] == e[groupByColumn] && _isIncluded(i),
+        );
         if (match != null) {
           if (match['count'] is num) {
             match['count'] = (match['count'] as num) + 1;
@@ -110,80 +119,116 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _listViewHeader() => SizedBox(
         height: 30,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          itemCount: headers.length,
-          itemBuilder: (BuildContext context, int i) => Container(
-            width: headers.isEmpty ? 10 : (MediaQuery.of(context).size.width - 40) / (headers.length),
-            padding: const EdgeInsets.symmetric(horizontal: 5),
-            decoration: BoxDecoration(
-              color: AppColors.orange,
-              border: Border.all(
-                color: Colors.black,
-                strokeAlign: BorderSide.strokeAlignOutside,
-              ),
-            ),
-            child: Row(
-              children: <Widget>[
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      sortByColumn = sortByColumn == headers[i] ? null : headers[i];
-                      _parseCsvToJson();
-                    },
-                    child: SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: Icon(
-                        Icons.arrow_downward_sharp,
-                        size: 18,
-                        color: sortByColumn == headers[i] ? AppColors.green : Colors.black,
-                      ),
+        child: Row(
+          children: <Widget>[
+            _headerCheckboxCell(),
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: headers.length,
+                itemBuilder: (BuildContext context, int i) => Container(
+                  width: _dataColumnWidth(context),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.orange,
+                    border: Border.all(
+                      color: Colors.black,
+                      strokeAlign: BorderSide.strokeAlignOutside,
                     ),
                   ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      '${headers[i]}${_columnSumResult(i)}',
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                if (_canSumColumn(i) == false) ...<Widget>[
-                  const SizedBox(width: 5),
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        groupByColumn = groupByColumn == headers[i] ? null : headers[i];
-                        _parseCsvToJson();
-                      },
-                      child: SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: Icon(
-                          Icons.filter_alt_sharp,
-                          size: 18,
-                          color: groupByColumn == headers[i] ? AppColors.green : Colors.black,
+                  child: Row(
+                    children: <Widget>[
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            sortByColumn = sortByColumn == headers[i] ? null : headers[i];
+                            _parseCsvToJson();
+                          },
+                          child: SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: Icon(
+                              Icons.arrow_downward_sharp,
+                              size: 18,
+                              color: sortByColumn == headers[i] ? AppColors.green : Colors.black,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            '${headers[i]}${_columnSumResult(i)}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_canSumColumn(i) == false) ...<Widget>[
+                        const SizedBox(width: 5),
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              groupByColumn = groupByColumn == headers[i] ? null : headers[i];
+                              _parseCsvToJson();
+                            },
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: Icon(
+                                Icons.filter_alt_sharp,
+                                size: 18,
+                                color: groupByColumn == headers[i] ? AppColors.green : Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
+          ],
+        ),
+      );
+
+  Widget _headerCheckboxCell() => Container(
+        width: _checkboxColumnWidth,
+        decoration: BoxDecoration(
+          color: AppColors.orange,
+          border: Border.all(
+            color: Colors.black,
+            strokeAlign: BorderSide.strokeAlignOutside,
           ),
         ),
       );
+
+  double _dataColumnWidth(BuildContext context) {
+    if (headers.isEmpty) return 10;
+    return (MediaQuery.of(context).size.width - 40 - _checkboxColumnWidth) / headers.length;
+  }
+
+  bool _isIncluded(Map<String, dynamic> row) {
+    int index = itemList.indexOf(row);
+    if (index < 0 || index >= _includedFlags.length) return true;
+    return _includedFlags[index];
+  }
+
+  void _setIncluded(Map<String, dynamic> row, bool value) {
+    int index = itemList.indexOf(row);
+    if (index < 0 || index >= _includedFlags.length) return;
+    _includedFlags[index] = value;
+    setState(() {});
+  }
 
   bool _canSumColumn(int i) {
     if (filteredList.isEmpty) return false;
@@ -195,6 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_canSumColumn(i) == false) return '';
     num sum = 0;
     for (Map<String, dynamic> e in filteredList) {
+      if (_isIncluded(e) == false) continue;
       num? val = num.tryParse(e[headers[i]]);
       sum += val ?? 0;
     }
@@ -207,32 +253,71 @@ class _MyHomePageState extends State<MyHomePage> {
             shrinkWrap: true,
             padding: EdgeInsets.zero,
             itemCount: filteredList.length,
-            itemBuilder: (BuildContext context, int i) => SizedBox(
-              height: 30,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: headers.length,
-                itemBuilder: (BuildContext context, int j) => Container(
-                  width: headers.isEmpty ? 10 : (MediaQuery.of(context).size.width - 40) / (headers.length),
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.orange,
-                      strokeAlign: BorderSide.strokeAlignCenter,
+            itemBuilder: (BuildContext context, int i) {
+              Map<String, dynamic> row = filteredList[i];
+              bool included = _isIncluded(row);
+              return SizedBox(
+                height: 30,
+                child: Row(
+                  children: <Widget>[
+                    _rowCheckboxCell(row, included),
+                    Expanded(
+                      child: Opacity(
+                        opacity: included ? 1 : _uncheckedRowOpacity,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: headers.length,
+                          itemBuilder: (BuildContext context, int j) => Container(
+                            width: _dataColumnWidth(context),
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.orange,
+                                strokeAlign: BorderSide.strokeAlignCenter,
+                              ),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              headers[j] == groupByColumn && row['count'] != null
+                                  ? '(${row['count']}) ${row[headers[j]]}'
+                                  : row[headers[j]],
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    headers[j] == groupByColumn && filteredList[i]['count'] != null
-                        ? '(${filteredList[i]['count']}) ${filteredList[i][headers[j]]}'
-                        : filteredList[i][headers[j]],
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
-              ),
-            ),
+              );
+            },
+          ),
+        ),
+      );
+
+  Widget _rowCheckboxCell(Map<String, dynamic> row, bool included) => Container(
+        width: _checkboxColumnWidth,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: AppColors.orange,
+            strokeAlign: BorderSide.strokeAlignCenter,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: FittedBox(
+          child: Checkbox(
+            value: included,
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            side: const BorderSide(color: AppColors.orange),
+            fillColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+              if (states.contains(WidgetState.selected)) return AppColors.orange;
+              return Colors.transparent;
+            }),
+            checkColor: Colors.black,
+            onChanged: (bool? value) => _setIncluded(row, value ?? false),
           ),
         ),
       );
@@ -256,6 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onTap: () {
             sortByColumn = null;
             groupByColumn = null;
+            _includedFlags = <bool>[];
             _parseCsvToJson();
           },
           child: Container(
@@ -275,6 +361,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 
   void _parseCsvToJson() {
+    List<bool> previousIncluded = List<bool>.from(_includedFlags);
     itemList.clear();
     List<List<String>>? rows = input
         ?.split(RegExp(r'\r?\n'))
@@ -291,6 +378,9 @@ class _MyHomePageState extends State<MyHomePage> {
               for (int i = 0; i < headers.length; i++) headers[i]: row[i],
             })
         .toList();
+    _includedFlags = <bool>[
+      for (int i = 0; i < itemList.length; i++) i < previousIncluded.length ? previousIncluded[i] : true,
+    ];
 
     _filterList();
   }
